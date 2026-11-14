@@ -1,0 +1,15 @@
+name: vibrant
+description: Phong cách trẻ trung — màu tươi, gradient, bo góc lớn
+colors:
+  primary: "#ec4899"
+  secondary: "#8b5cf6"
+  background: "#fff7fb"
+  surface: "#ffffff"
+  text: "#1f2937"
+  accent: "#f59e0b"
+font: "Poppins"
+radius: "16px"
+rules:
+  - Dùng gradient hồng -> tím cho hero và nút chính
+  - Bo góc lớn, bóng mềm, cảm giác vui tươi
+  - Tiêu đề to, đậm

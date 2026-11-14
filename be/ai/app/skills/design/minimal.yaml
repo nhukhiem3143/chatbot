@@ -1,0 +1,15 @@
+name: minimal
+description: Phong cách tối giản — trắng, xám, nhiều khoảng trống
+colors:
+  primary: "#111827"
+  secondary: "#6b7280"
+  background: "#ffffff"
+  surface: "#f9fafb"
+  text: "#111827"
+  accent: "#2563eb"
+font: "Inter"
+radius: "6px"
+rules:
+  - Nhiều khoảng trắng, ít màu, viền mỏng
+  - Chỉ 1 màu nhấn duy nhất cho nút chính
+  - Không dùng gradient, đổ bóng nhẹ

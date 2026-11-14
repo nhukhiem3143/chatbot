@@ -1,0 +1,40 @@
+# Khai báo vùng KHÓA / vùng ĐƯỢC SỬA của template (glob theo đường dẫn tương đối trong files/)
+# Validator từ chối nếu Developer ghi vào file locked.
+name: ecommerce_basic
+description: Web bán hàng cơ bản (React+Vite, Node/Express, MySQL) có phân quyền, giỏ hàng, đơn hàng, thanh toán mô phỏng
+
+locked:
+  - docker-compose.yml
+  - .env
+  - db/Dockerfile
+  - db/01_init.sql
+  - api/Dockerfile
+  - api/server.js
+  - api/app.js
+  - api/db.js
+  - api/middlewares/**
+  - api/routes/auth.js
+  - api/routes/products.js
+  - api/routes/categories.js
+  - api/routes/cart.js
+  - api/routes/orders.js
+  - api/routes/payments.js
+  - web/Dockerfile
+  - web/nginx.conf
+  - web/vite.config.js
+  - web/src/main.jsx
+  - web/src/api/**
+  - web/src/context/**
+
+editable:
+  - db/02_extra.sql
+  - db/03_seed.sql
+  - api/package.json          # chỉ được thêm dependency
+  - api/routes/custom/**
+  - web/package.json          # chỉ được thêm dependency
+  - web/index.html
+  - web/src/App.jsx
+  - web/src/theme/**
+  - web/src/components/**
+  - web/src/pages/**
+  - web/src/custom/**

@@ -1,0 +1,15 @@
+name: tech_neon
+description: Phong cách công nghệ — nền tối, nhấn neon
+colors:
+  primary: "#22d3ee"
+  secondary: "#94a3b8"
+  background: "#0b1020"
+  surface: "#141b34"
+  text: "#e2e8f0"
+  accent: "#a855f7"
+font: "Space Grotesk"
+radius: "8px"
+rules:
+  - Nền tối, chữ sáng, đảm bảo độ tương phản đủ đọc
+  - Nút/viền nhấn dùng cyan/tím, có thể phát sáng nhẹ
+  - Bố cục gọn, số liệu/giá dùng chữ đậm

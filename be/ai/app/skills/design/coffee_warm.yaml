@@ -1,0 +1,16 @@
+name: coffee_warm
+description: Phong cách quán cà phê — nâu, kem, ấm áp
+colors:
+  primary: "#6f4e37"
+  secondary: "#a67b5b"
+  background: "#faf3e8"
+  surface: "#ffffff"
+  text: "#3b2a20"
+  accent: "#d4a373"
+font: "Playfair Display"
+radius: "12px"
+rules:
+  - Dùng tông nâu/kem, tránh màu lạnh chói
+  - Tiêu đề dùng font serif, nội dung dùng sans-serif dễ đọc
+  - Ảnh sản phẩm ưu tiên ấm, bo góc mềm
+  - Hero có gradient nâu -> be nhẹ

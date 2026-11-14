@@ -1,0 +1,81 @@
+# Điều phối toàn bộ Studio: MySQL, phpMyAdmin, AI service, Data service, Frontend
+# Chạy:  cp .env.example .env  (điền DEEPSEEK_API_KEY)  &&  docker compose up -d --build
+services:
+  mysql:
+    image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-studio}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # init.sql rồi seed.sql tự chạy lần đầu (khi volume còn trống)
+      - ./be/data-service/database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASS:-rootpass}
+    ports:
+      - "${PORT_PMA:-8081}:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ai:
+    build: ./be/ai
+    env_file: .env
+    environment:
+      DATA_SERVICE_URL: http://data-service:5000
+      OUTPUTS_DIR: /app/outputs
+    volumes:
+      - ./outputs:/app/outputs
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  data-service:
+    build: ./be/data-service
+    env_file: .env
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASS: ${DB_ROOT_PASS:-rootpass}
+      DB_NAME: ${DB_NAME:-studio}
+      AI_URL: http://ai:8000
+      OUTPUTS_DIR: /app/outputs
+    volumes:
+      - ./outputs:/app/outputs
+      # Cho phép chạy `docker compose` của web sinh ra trên host (quyền cao, chỉ dùng cho đồ án)
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Linux không tự có host.docker.internal; cần để kiểm tra web preview (cổng 7000-7100 mở trên host)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PORT_API:-5000}:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    restart: unless-stopped
+
+  fe:
+    build: ./fe
+    ports:
+      - "${PORT_STUDIO:-8080}:80"
+    depends_on:
+      - data-service
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

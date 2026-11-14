@@ -1,0 +1,13 @@
+# Gợi ý skill design mặc định theo loại hình kinh doanh (khi user KHÔNG nói rõ phong cách)
+default_design: minimal
+by_business_type:
+  cafe: coffee_warm
+  "quán cà phê": coffee_warm
+  "trà sữa": vibrant
+  "công nghệ": tech_neon
+  "điện thoại": tech_neon
+  "laptop": tech_neon
+  "thời trang": vibrant
+  "giày": vibrant
+  "sách": minimal
+  "nội thất": minimal

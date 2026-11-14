@@ -1,0 +1,40 @@
+# [LOCKED] Web bán hàng do AI sinh ra: db + api + web
+# Không dùng bind mount (chạy được cả khi gọi từ trong container qua docker.sock)
+services:
+  db:
+    build: ./db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-shop}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    mem_limit: 512m
+
+  api:
+    build: ./api
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: ${DB_ROOT_PASS:-rootpass}
+      DB_NAME: ${DB_NAME:-shop}
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 256m
+
+  web:
+    build: ./web
+    ports:
+      - "${PORT_WEB:-7000}:80"
+    depends_on:
+      - api
+    mem_limit: 128m
+
+volumes:
+  db_data:
