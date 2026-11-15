@@ -33,6 +33,8 @@ async function ensureAdmin() {
   await waitDb();
   await ensureAdmin();
   app.listen(5000, '0.0.0.0', () => console.log('data-service chạy ở cổng 5000'));
+  // Bật lại các web con đang ghi "running" (vd sau khi khởi động lại máy)
+  require('./services/previewManager').reconcile().catch((e) => console.error('[reconcile]', e.message));
 })().catch((e) => {
   console.error(e);
   process.exit(1);

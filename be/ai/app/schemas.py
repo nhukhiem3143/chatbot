@@ -69,6 +69,39 @@ class InterviewerOut(_Base):
     summary: str = ""                            # tóm tắt hội thoại (cache ngữ cảnh)
 
 
+
+class RevisionIntent(_Base):
+    """Phân loại hội thoại khi website đã tồn tại."""
+
+    reply: str = ""
+    action: str = "chat"
+    change_request: str = ""
+    spec_draft: Optional[Spec] = None
+    summary: str = ""
+
+    @field_validator(
+        "reply",
+        "change_request",
+        "summary",
+        mode="before"
+    )
+    @classmethod
+    def _normalize_strings(cls, value):
+        """LLM trả null -> chuyển thành chuỗi rỗng."""
+        if value is None:
+            return ""
+        return str(value)
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def _normalize_action(cls, value):
+        return (
+            "revise"
+            if str(value or "").strip().lower() == "revise"
+            else "chat"
+        )
+
+
 # ---------------------------------------------------------------- PLAN
 class FileTask(_Base):
     path: str
@@ -82,6 +115,17 @@ class ApiEndpoint(_Base):
     request: Any = None
     response: Any = None
     purpose: str = ""
+
+    @field_validator("path", mode="before")
+    @classmethod
+    def _strip_api_prefix(cls, v):
+        # LLM hay viết '/api/reviews/...'; hợp đồng luôn tính từ sau '/api' (FE đã có baseURL=/api)
+        v = str(v or "").strip()
+        if not v.startswith("/"):
+            v = "/" + v
+        if v == "/api" or v.startswith("/api/"):
+            v = v[4:] or "/"
+        return v
 
 
 class Plan(_Base):

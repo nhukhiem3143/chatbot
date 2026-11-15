@@ -21,7 +21,7 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  const loadList = useCallback(() => get('/conversations').then(setConvs).catch(() => {}), []);
+  const loadList = useCallback(() => get('/conversations').then(setConvs).catch(() => { }), []);
   useEffect(() => { loadList(); }, [loadList]);
 
   // Nạp hội thoại + spec + run gần nhất của hội thoại này
@@ -36,14 +36,14 @@ export default function ChatPage() {
     get('/runs').then((rs) => {
       const r = rs.find((x) => String(x.conversation_id) === String(id));
       if (r) { get(`/runs/${r.id}`).then(setRun); setTab('run'); }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [id]);
 
   // Theo dõi tiến trình tạo web
   useEffect(() => {
     if (!run || FINISHED.includes(run.status)) return undefined;
     if (run.status === 'running' && !run.current_agent) return undefined;
-    const t = setInterval(() => get(`/runs/${run.id}`).then(setRun).catch(() => {}), 3000);
+    const t = setInterval(() => get(`/runs/${run.id}`).then(setRun).catch(() => { }), 3000);
     return () => clearInterval(t);
   }, [run]);
 
@@ -85,6 +85,10 @@ export default function ChatPage() {
   };
 
   const stop = async () => { await post(`/generate/${run.id}/stop`); setRun(await get(`/runs/${run.id}`)); };
+  const restart = async () => {
+    setErr(''); setBusy(true);
+    try { await post(`/generate/${run.id}/start`); setRun(await get(`/runs/${run.id}`)); } catch (e) { setErr(errMsg(e)); } finally { setBusy(false); }
+  };
   const removeConv = async (cid) => {
     if (!confirm('Xóa cuộc trò chuyện này?')) return;
     await del(`/conversations/${cid}`);
@@ -127,6 +131,7 @@ export default function ChatPage() {
               {showPreview && <PreviewFrame port={run.port} />}
               <div className="row">
                 {run.status === 'running' && <button className="btn small ghost" onClick={stop}>Tắt web</button>}
+                {run.status === 'stopped' && <button className="btn small" onClick={restart} disabled={busy}>▶ Bật lại web</button>}
                 <button className="btn small ghost" onClick={() => downloadZip(run.id)} disabled={!['running', 'stopped', 'failed'].includes(run.status)}>⬇ Tải ZIP</button>
                 <Link className="btn small ghost" to={`/runs/${run.id}`}>Xem file</Link>
               </div>

@@ -14,6 +14,6 @@ BASE_DIR = Path(__file__).resolve().parent
 SKILLS_DIR = BASE_DIR / "skills"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
-MAX_FIX_ROUNDS = 7         # số vòng Developer sửa lỗi tối đa sau khi Tester báo lỗi
+MAX_FIX_ROUNDS = 4         # số vòng Developer sửa lỗi tối đa sau khi Tester báo lỗi
 MAX_FILES_PER_RUN = 25      # chặn Plan quá lớn
 LLM_TIMEOUT = 120

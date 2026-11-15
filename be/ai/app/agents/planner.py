@@ -28,6 +28,8 @@ NGUYÊN TẮC:
   - Tính năng thêm (vd đánh giá): thêm bảng vào db/02_extra.sql (files_to_add hoặc edit), route mới tại api/routes/custom/<ten>.js
     (tự mount ở /api/<ten>), trang/component FE mới, rồi đăng ký route trong web/src/App.jsx (files_to_edit).
   - api_contract chỉ liệt kê API MỚI (method, path, auth: public|user|admin, request, response). Tên path phải khác API lõi.
+    path KHÔNG có tiền tố /api (vd "/reviews/product/:productId", không phải "/api/reviews/..."). File route tương ứng: api/routes/custom/reviews.js
+    (router chỉ khai báo phần sau /reviews, vd router.get('/product/:productId', ...)).
   - Mỗi file có "goal" 1-2 câu cụ thể (nội dung gì, dùng API/bảng nào) để Developer làm đúng không cần hỏi lại.
   - Tối đa 15 file. Ít file hơn thì tốt hơn.
   - Có thể tùy biến Home.jsx/ProductList/Header/Footer cho hợp chủ đề (nội dung chữ, bố cục), nhưng giữ nguyên cách dùng context/api.

@@ -19,6 +19,12 @@ async function load(req, res) {
 router.get('/:id', wrap(async (req, res) => {
   const r = await load(req, res);
   if (!r) return;
+  // DB ghi "running" nhưng container thật đã tắt (vd sau khi tắt/bật máy) -> sửa lại cho đúng để UI hiện nút "Bật lại web"
+  if (r.status === 'running' && r.port && !(await preview.isRunning(r.id))) {
+    await runs.update(r.id, { status: 'stopped', port: null });
+    r.status = 'stopped';
+    r.port = null;
+  }
   return ok(res, { ...r, files: await runs.files(r.id) });
 }));
 

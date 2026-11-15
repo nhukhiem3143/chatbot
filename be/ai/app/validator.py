@@ -72,7 +72,7 @@ def validate_plan(plan: Plan, manifest: dict, project_dir: Path) -> List[str]:
         seen.add(p)
         if is_locked(p, manifest) or not is_editable(p, manifest):
             errs.append(f"files_to_edit: '{p}' thuộc vùng KHÓA hoặc ngoài vùng được sửa")
-        elif not (project_dir / p).exists():
+        elif not (project_dir / p).is_file():
             errs.append(f"files_to_edit: '{p}' chưa tồn tại (hãy đưa vào files_to_add)")
     for t in plan.files_to_add:
         try:
@@ -101,8 +101,14 @@ def validate_plan(plan: Plan, manifest: dict, project_dir: Path) -> List[str]:
 # ------------------------------------------------------------------ FILE
 def validate_file(path: str, content: str, plan: Plan, manifest: dict) -> List[str]:
     errs: List[str] = []
+    try:
+        path = safe_rel(path)
+    except ValueError as e:
+        return [str(e)]
     if path not in plan.all_paths():
         errs.append(f"'{path}' không nằm trong Plan")
+    if not is_editable(path, manifest):
+        errs.append(f"'{path}' nằm ngoài vùng editable")
     if is_locked(path, manifest):
         errs.append(f"'{path}' thuộc vùng KHÓA, không được ghi")
     if not content.strip():

@@ -12,13 +12,17 @@ SYSTEM = """Bạn là lập trình viên full-stack. Bạn viết ĐÚNG MỘT F
 CÔNG NGHỆ: Frontend React 18 + Vite (JSX, react-router-dom v6, axios). Backend Node 20 + Express (CommonJS: require/module.exports) + mysql2/promise. MySQL 8.
 QUY TẮC BẮT BUỘC:
   - Chỉ làm đúng file được giao, bám sát "goal". KHÔNG đổi tên API/bảng/biến ngoài Plan. KHÔNG tạo file khác.
+  - Khi SỬA LỖI, đọc code liên quan FE/context/API/middleware. Không đoán tên hàm, signature, định dạng token hoặc payload.
+  - Nếu sửa auth/client/cart: bảo toàn các chức năng đúng, gửi đúng JWT/cookie như backend xác thực. Không bypass authentication.
+  - Frontend ưu tiên DÙNG API client và CartContext thực tế trong project; KHÔNG tự giả định tên export/addToCart. Căn cứ vào file hiện tại. Nếu gọi /api, xác thực đúng theo auth middleware.
   - Frontend gọi API qua `import api from '../api/client.js'` (đường dẫn tương đối đúng vị trí file), vd api.get('/products'). baseURL đã là /api.
     Có sẵn: useAuth() (user, isAdmin), useCart() (items, add...), money(n) từ client.js.
-  - Khi gọi API ở Frontend, LUÔN dùng trạng thái loading (isLoading) và BẮT BUỘC phải tắt nó trong khối `finally` (hoặc `.finally()`) để tránh kẹt màn hình chờ (overlay) khi API bị lỗi.
   - Dùng biến CSS (var(--primary), var(--surface)...) và class có sẵn trong theme.css (.container .grid .card .btn .panel .row .muted ...).
     Cần CSS riêng: tạo ở file .css cùng thư mục được Plan cho phép, hoặc dùng style inline. Không hardcode màu khác bảng màu đã chốt.
   - Giao diện tiếng Việt, responsive, đẹp, đúng phong cách skill design.
   - Backend route: `const router = require('express').Router(); const pool = require('../../db');` (từ api/routes/custom/),
+    File api/routes/custom/<ten>.js được tự mount tại /api/<ten>, nên trong router CHỈ khai báo phần SAU /<ten>
+    (vd api_contract "/reviews/product/:id" -> router.get('/product/:id', ...)). Frontend gọi api.get('/reviews/product/1') (KHÔNG thêm /api).
     auth: `require('../../middlewares/auth')`, quyền: `require('../../middlewares/role')('admin')`. Bọc async bằng try/catch hoặc wrap. `module.exports = router`.
   - SQL: chỉ CREATE TABLE IF NOT EXISTS / ALTER ... ADD COLUMN / INSERT. TUYỆT ĐỐI không DROP, không đụng bảng users.
     Dữ liệu seed: INSERT vào categories(name, slug) rồi products(category_id, name, description, price, image_url, stock);
@@ -28,20 +32,26 @@ QUY TẮC BẮT BUỘC:
   - Code đầy đủ, chạy được ngay, không placeholder, không TODO.
 ĐẦU RA: CHỈ MỘT khối code markdown ```...``` chứa TOÀN BỘ nội dung file. Không giải thích gì thêm."""
 
+
 def _related(state: State, path: str) -> str:
     """Chỉ đưa các file liên quan tới file đang làm (giảm nhiễu, tiết kiệm token)."""
     rels: List[str] = []
-    if path.startswith("web/src/"):
-        rels = ["web/src/api/client.js", "web/src/theme/theme.css"]
-    elif path.startswith("api/routes/custom/"):
-        rels = ["api/routes/categories.js", "api/middlewares/auth.js"]
+    if path.startswith("web/src/") or path.startswith("api/"):
+        rels = [
+            "web/src/api/client.js", "web/src/context/CartContext.jsx",
+            "web/src/context/AuthContext.jsx", "web/src/pages/ProductDetail.jsx",
+            "web/src/components/ProductCard.jsx", "web/src/pages/Cart.jsx",
+            "api/routes/cart.js", "api/routes/auth.js", "api/middlewares/auth.js",
+            "api/app.js", "web/src/theme/theme.css",
+        ]
+        rels = [r for r in rels if r != path]
     elif path.startswith("db/"):
         rels = ["db/01_init.sql"]
     out = []
     for r in rels:
         c = read_file(state.project_dir, r)
         if c:
-            out.append(f"--- {r} (chỉ để tham khảo, KHÔNG sửa) ---\n{c[:3500]}")
+            out.append(f"--- {r} (chỉ để tham khảo, KHÔNG sửa) ---\n{c[:4800]}")
     # FE cần biết endpoint mới; App.jsx cần biết các trang mới
     if path.startswith("web/src/") and state.plan.api_contract:
         out.append("--- api_contract (API mới) ---\n" + json.dumps([e.model_dump() for e in state.plan.api_contract], ensure_ascii=False))
@@ -64,12 +74,18 @@ class Developer(BaseAgent):
         }, ensure_ascii=False)
 
     def _base_user(self, state: State, path: str, goal: str) -> str:
-        return (
+        s = (
             "PLAN (hợp đồng chung, giữ nhất quán):\n" + self._plan_text(state)
             + "\n\nSPEC:\n" + json.dumps(state.spec.model_dump(), ensure_ascii=False)
             + "\n\nTHEME ĐÃ CHỐT:\n" + registry.design_prompt(state.theme)
-            + f"\n\n=== FILE CẦN VIẾT: {path} ===\nMục tiêu: {goal}\n"
         )
+        if state.change_request:
+            s += (
+                "\n\nĐÂY LÀ CHỈNH SỬA MỘT WEB ĐÃ CHẠY. YÊU CẦU CỦA USER:\n" + state.change_request
+                + "\nChỉ thay đổi đúng phần liên quan tới yêu cầu và mục tiêu của file này; GIỮ NGUYÊN mọi thứ còn lại "
+                  "(import, route, tên hàm, logic, style không liên quan). Không viết lại từ đầu."
+            )
+        return s + f"\n\n=== FILE CẦN VIẾT: {path} ===\nMục tiêu: {goal}\n"
 
     def run(self, state: State, path: str = "", goal: str = "", validation_errors: Optional[List[str]] = None, **kwargs) -> str:
         current = read_file(state.project_dir, path)
