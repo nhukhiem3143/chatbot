@@ -1,13 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header.jsx';
 import ChatBox from '../components/ChatBox.jsx';
 import SpecEditor from '../components/SpecEditor.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
 import PreviewFrame from '../components/PreviewFrame.jsx';
+import { Icon } from '../components/Icon.jsx';
 import { get, post, put, del, errMsg, downloadZip } from '../api/client.js';
 
-const FINISHED = ['failed', 'stopped'];
+const FINISHED = ['failed', 'stopped', 'ready'];
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -20,6 +21,8 @@ export default function ChatPage() {
   const [tab, setTab] = useState('spec');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  // Hội thoại vừa tạo trong send(): bỏ qua lần nạp đầu để không xóa tin nhắn đang hiển thị
+  const justCreated = useRef(null);
 
   const loadList = useCallback(() => get('/conversations').then(setConvs).catch(() => { }), []);
   useEffect(() => { loadList(); }, [loadList]);
@@ -28,6 +31,7 @@ export default function ChatPage() {
   useEffect(() => {
     setErr(''); setRun(null); setTab('spec');
     if (!id) { setMessages([]); setSpec(null); setReady(false); return; }
+    if (justCreated.current === String(id)) { justCreated.current = null; return; }
     get(`/conversations/${id}`).then((d) => {
       setMessages(d.messages);
       setSpec(d.spec);
@@ -54,6 +58,7 @@ export default function ChatPage() {
       if (!cid) {
         const c = await post('/conversations', {});
         cid = c.id;
+        justCreated.current = String(cid);
         nav(`/c/${cid}`, { replace: true });
       }
       setMessages((m) => [...m, { role: 'user', content: text }]);
@@ -84,7 +89,9 @@ export default function ChatPage() {
     } catch (e) { setErr(errMsg(e)); } finally { setBusy(false); }
   };
 
-  const stop = async () => { await post(`/generate/${run.id}/stop`); setRun(await get(`/runs/${run.id}`)); };
+  const stop = async () => {
+    try { await post(`/generate/${run.id}/stop`); setRun(await get(`/runs/${run.id}`)); } catch (e) { setErr(errMsg(e)); }
+  };
   const restart = async () => {
     setErr(''); setBusy(true);
     try { await post(`/generate/${run.id}/start`); setRun(await get(`/runs/${run.id}`)); } catch (e) { setErr(errMsg(e)); } finally { setBusy(false); }
@@ -103,12 +110,13 @@ export default function ChatPage() {
       <Header />
       <div className="layout">
         <aside className="side">
-          <button className="btn" onClick={() => nav('/')}>+ Cuộc trò chuyện mới</button>
+          <button className="btn" onClick={() => nav('/')}><Icon name="plus" size={16} />Cuộc trò chuyện mới</button>
+          <div className="side-title">Gần đây</div>
           <div className="conv-list">
             {convs.map((c) => (
               <div key={c.id} className={`conv ${String(c.id) === String(id) ? 'sel' : ''}`}>
-                <Link to={`/c/${c.id}`}>{c.title}</Link>
-                <button className="x" onClick={() => removeConv(c.id)} title="Xóa">✕</button>
+                <Link to={`/c/${c.id}`}><Icon name="chat" size={16} /><span>{c.title}</span></Link>
+                <button className="x" onClick={() => removeConv(c.id)} title="Xóa" aria-label="Xóa cuộc trò chuyện"><Icon name="trash" size={14} /></button>
               </div>
             ))}
           </div>
@@ -116,7 +124,7 @@ export default function ChatPage() {
 
         <main className="center">
           <ChatBox messages={messages} onSend={send} busy={busy} />
-          {err && <div className="error pad">{err}</div>}
+          {err && <div className="error pad" role="alert">{err}</div>}
         </main>
 
         <section className="right">
@@ -130,10 +138,10 @@ export default function ChatPage() {
               <ProgressBar run={run} />
               {showPreview && <PreviewFrame port={run.port} />}
               <div className="row">
-                {run.status === 'running' && <button className="btn small ghost" onClick={stop}>Tắt web</button>}
-                {run.status === 'stopped' && <button className="btn small" onClick={restart} disabled={busy}>▶ Bật lại web</button>}
-                <button className="btn small ghost" onClick={() => downloadZip(run.id)} disabled={!['running', 'stopped', 'failed'].includes(run.status)}>⬇ Tải ZIP</button>
-                <Link className="btn small ghost" to={`/runs/${run.id}`}>Xem file</Link>
+                {run.status === 'running' && <button className="btn small ghost" onClick={stop}><Icon name="power" size={15} />Tắt web</button>}
+                {run.status === 'stopped' && <button className="btn small" onClick={restart} disabled={busy}><Icon name="play" size={14} />Bật lại web</button>}
+                <button className="btn small ghost" onClick={() => downloadZip(run.id)} disabled={!['running', 'stopped', 'failed', 'ready'].includes(run.status)}><Icon name="dl" size={15} />Tải ZIP</button>
+                <Link className="btn small ghost" to={`/runs/${run.id}`}><Icon name="code" size={15} />Xem file</Link>
               </div>
             </div>
           )}

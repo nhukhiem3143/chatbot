@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
+import { Logo } from '../components/Icon.jsx';
 import { get } from '../api/client.js';
 
 const fmt = (d) => (d ? new Date(d).toLocaleString('vi-VN') : '');
 
 export default function HistoryPage() {
   const [runs, setRuns] = useState([]);
-  useEffect(() => { get('/runs').then(setRuns).catch(() => {}); }, []);
+  useEffect(() => { get('/runs').then(setRuns).catch(() => { }); }, []);
   return (
     <div className="app">
       <Header />
@@ -26,7 +27,14 @@ export default function HistoryPage() {
             ))}
           </tbody>
         </table>
-        {!runs.length && <p className="muted">Chưa có lần tạo web nào.</p>}
+        {!runs.length && (
+          <div className="empty-state">
+            <Logo size={44} text={false} />
+            <h3>Chưa có website nào</h3>
+            <p className="muted">Hãy trò chuyện với AI để tạo website đầu tiên.</p>
+            <Link className="btn" to="/">Bắt đầu trò chuyện</Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 import React from 'react';
+import { Icon } from './Icon.jsx';
 
-const ICON = { generated: '🆕', edited: '✏️', template: '📄' };
+// Danh sách file của project (nhóm theo thư mục cấp 1). kind: generated | edited | template
+const KIND = { generated: 'Mới tạo', edited: 'Đã sửa', template: 'Từ template' };
 
-// Danh sách file của project (nhóm theo thư mục cấp 1)
 export default function FileTree({ files, selected, onSelect }) {
   const groups = {};
   (files || []).forEach((f) => {
@@ -13,11 +14,15 @@ export default function FileTree({ files, selected, onSelect }) {
     <div className="filetree">
       {Object.keys(groups).sort().map((g) => (
         <div key={g}>
-          <div className="ft-group">📁 {g}</div>
+          <div className="ft-group"><Icon name="folder" size={15} />{g}</div>
           {groups[g].map((f) => (
-            <div key={f.path} className={`ft-file ${selected === f.path ? 'sel' : ''}`} onClick={() => onSelect(f.path)} title={f.kind}>
-              {ICON[f.kind] || '📄'} {f.path}
-            </div>
+            <button key={f.path} type="button" className={`ft-file ${selected === f.path ? 'sel' : ''}`}
+              onClick={() => onSelect(f.path)} title={KIND[f.kind] || f.kind}>
+              <Icon name="file" size={14} />
+              <span>{f.path}</span>
+              {f.kind === 'generated' && <i className="dot-new" aria-label="Mới tạo" />}
+              {f.kind === 'edited' && <i className="dot-edit" aria-label="Đã sửa" />}
+            </button>
           ))}
         </div>
       ))}

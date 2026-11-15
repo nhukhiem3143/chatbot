@@ -39,10 +39,9 @@ exports.update = async (id, fields) => {
 };
 
 exports.listForUser = async (user) => {
-  const sql = `SELECT r.id,r.conversation_id,r.template,r.status,r.current_agent,r.port,r.error,r.started_at,r.finished_at
-               FROM runs r JOIN conversations c ON c.id=r.conversation_id
-               ${user.role === 'admin' ? '' : 'WHERE c.user_id=?'} ORDER BY r.id DESC`;
-  const [r] = await pool.query(sql, user.role === 'admin' ? [] : [user.id]);
+  const [r] = await pool.query(
+    `SELECT r.id,r.conversation_id,r.template,r.status,r.current_agent,r.port,r.error,r.started_at,r.finished_at
+     FROM runs r JOIN conversations c ON c.id=r.conversation_id WHERE c.user_id=? ORDER BY r.id DESC`, [user.id]);
   return r;
 };
 

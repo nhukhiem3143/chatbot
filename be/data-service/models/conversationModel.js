@@ -1,12 +1,9 @@
 const pool = require('../db');
 
-// Admin xem được tất cả, user chỉ xem của mình
+// Mỗi tài khoản (kể cả admin) chỉ thấy hội thoại của chính mình trong màn Trò chuyện.
+// Admin xem hội thoại của người khác qua /api/admin/conversations.
 exports.listByUser = async (user) => {
-  const sql =
-    user.role === 'admin'
-      ? 'SELECT * FROM conversations ORDER BY updated_at DESC'
-      : 'SELECT * FROM conversations WHERE user_id=? ORDER BY updated_at DESC';
-  const [r] = await pool.query(sql, user.role === 'admin' ? [] : [user.id]);
+  const [r] = await pool.query('SELECT * FROM conversations WHERE user_id=? ORDER BY updated_at DESC', [user.id]);
   return r;
 };
 

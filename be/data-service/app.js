@@ -19,6 +19,7 @@ app.use('/api/conversations', auth, require('./routes/conversations'));
 app.use('/api/specs', auth, require('./routes/specs'));
 app.use('/api/generate', auth, require('./routes/generate'));
 app.use('/api/runs', auth, require('./routes/runs'));
+app.use('/api/admin', auth, require('./routes/admin'));
 app.use('/api/templates', auth, require('./routes/templates'));
 
 // Chỉ AI service gọi vào (header x-internal-token)
